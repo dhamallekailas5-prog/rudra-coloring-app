@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rudra Colors">
+<meta name="theme-color" content="#1a1a2e">
+<title>Rudra Coloring App</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#12121f; --panel:#1e1e35; --panel2:#252540;
+  --accent:#ff6b9d; --accent2:#c084fc;
+  --text:#f0f0ff; --dim:#8888aa;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);user-select:none;-webkit-user-select:none;}
+
+#app{display:flex;flex-direction:column;height:100dvh;}
+
+/* HEADER */
+#header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--panel);border-bottom:1px solid rgba(255,255,255,.06);gap:8px;flex-shrink:0;}
+#logo{font-family:'Fredoka One',cursive;font-size:22px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hbtn{background:var(--panel2);border:none;color:var(--text);border-radius:12px;padding:8px 10px;font-size:21px;cursor:pointer;display:flex;align-items:center;font-family:'Nunito',sans-serif;font-weight:700;flex-shrink:0;-webkit-appearance:none;}
+.hbtn:active{opacity:.6;}
+.hbtn.off{opacity:.3;pointer-events:none;}
+#hactions{display:flex;gap:6px;align-items:center;}
+
+/* MAIN */
+#main{display:flex;flex:1;overflow:hidden;position:relative;}
+
+/* PANELS */
+.side-panel{width:68px;background:var(--panel);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:5px;overflow-y:auto;flex-shrink:0;}
+#left-panel{border-right:1px solid rgba(255,255,255,.06);}
+#right-panel{border-left:1px solid rgba(255,255,255,.06);}
+.tbtn{width:52px;height:52px;border-radius:14px;background:var(--panel2);border:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:21px;gap:1px;flex-shrink:0;-webkit-appearance:none;}
+.tbtn .lbl{font-size:8px;font-weight:800;color:var(--dim);letter-spacing:.3px;}
+.tbtn:active{opacity:.6;}
+.tbtn.on{background:linear-gradient(135deg,#2d2d5e,#3d2d6e);border-color:var(--accent2);}
+.tbtn.on .lbl{color:var(--accent2);}
+.sep{width:40px;height:1px;background:rgba(255,255,255,.08);margin:3px 0;flex-shrink:0;}
+#sens-box{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;background:var(--panel2);border-radius:12px;width:52px;}
+#sens-box label{font-size:8px;font-weight:800;color:var(--dim);text-align:center;}
+#sens{-webkit-appearance:none;width:36px;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));outline:none;}
+#sens::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.5);}
+
+/* CANVAS AREA */
+#cwrap{flex:1;position:relative;overflow:hidden;background:radial-gradient(ellipse at center,#1e1e3a 0%,#0d0d1a 100%);}
+#dc,#gc{display:block;position:absolute;touch-action:none;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.7);}
+#wc{display:none;}
+
+/* UPLOAD SCREEN */
+#uscreen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:20;padding:20px;}
+#uscreen.gone{display:none;}
+#uscreen h1{font-family:'Fredoka One',cursive;font-size:30px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;}
+#uscreen p{color:var(--dim);font-size:14px;font-weight:600;text-align:center;}
+.uopts{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px;}
+
+/* ── KEY FIX: label wraps the hidden input so tap works on Safari ── */
+.upload-label{display:flex;align-items:center;gap:14px;background:var(--panel);border:2px solid rgba(255,255,255,.1);border-radius:20px;padding:14px 18px;cursor:pointer;width:100%;transition:background .15s;}
+.upload-label:active{background:#2d2d52;border-color:var(--accent2);}
+.upload-label input[type=file]{position:absolute;width:0;height:0;opacity:0;pointer-events:none;}
+.u-icon{font-size:34px;flex-shrink:0;}
+.u-title{font-family:'Fredoka One',cursive;font-size:19px;color:var(--text);display:block;line-height:1;margin-bottom:3px;}
+.u-sub{font-size:11px;color:var(--dim);font-weight:600;display:block;}
+
+/* BOTTOM PALETTE */
+#bbar{background:var(--panel);border-top:1px solid rgba(255,255,255,.06);padding:8px 10px;display:flex;align-items:center;gap:8px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+#bbar::-webkit-scrollbar{display:none;}
+.sw{width:40px;height:40px;border-radius:50%;border:3px solid transparent;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:transform .1s,border-color .1s;}
+.sw:active{transform:scale(.85);}
+.sw.on{border-color:#fff;transform:scale(1.15);}
+#ccbtn{width:40px;height:40px;border-radius:50%;border:3px dashed rgba(255,255,255,.35);background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);cursor:pointer;flex-shrink:0;position:relative;overflow:hidden;transition:transform .1s;}
+#ccbtn:active{transform:scale(.85);}
+#ccbtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}
+
+/* TOAST */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(20,20,50,.96);color:#fff;padding:10px 20px;border-radius:20px;font-weight:700;font-size:14px;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:99;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* SPINNER */
+#spin{position:fixed;inset:0;background:rgba(10,10,20,.88);display:flex;align-items:center;justify-content:center;z-index:200;}
+#spin.gone{display:none;}
+.ring{width:50px;height:50px;border:4px solid rgba(255,255,255,.1);border-top-color:var(--accent);border-radius:50%;animation:rot .8s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+
+#upload-group{display:flex;gap:5px;align-items:center;}
+.upload-hbtn{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:5px 8px;min-width:52px;}
+.upload-hbtn-icon{font-size:18px;line-height:1;}
+.upload-hbtn-txt{font-size:9px;font-weight:800;color:var(--dim);letter-spacing:.3px;line-height:1;}
+#uscreen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;pointer-events:none;}
+#uscreen.gone{display:none;}
+#uscreen-inner{text-align:center;padding:30px;background:rgba(30,30,52,.7);border-radius:24px;border:2px dashed rgba(255,255,255,.1);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+/* BRUSH CURSOR */
+#bcur{position:fixed;pointer-events:none;border-radius:50%;border:2px solid rgba(255,255,255,.8);z-index:50;display:none;transform:translate(-50%,-50%);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="logo">🎨 Rudra</div>
+    <div id="hactions">
+      <button class="hbtn off" id="bundo">↩️</button>
+      <button class="hbtn off" id="bredo">↪️</button>
+      <button class="hbtn" id="bfit">⛶</button>
+      <div id="upload-group">
+        <label class="hbtn upload-hbtn" title="Photos">
+          <span class="upload-hbtn-icon">🖼️</span><span class="upload-hbtn-txt">Photos</span>
+          <input type="file" id="hfile-photos" accept="image/*" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;">
+        </label>
+        <label class="hbtn upload-hbtn" title="Files">
+          <span class="upload-hbtn-icon">📁</span><span class="upload-hbtn-txt">Files</span>
+          <input type="file" id="hfile-files" accept="image/png,image/jpeg,image/jpg,.png,.jpg,.jpeg" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;">
+        </label>
+        <label class="hbtn upload-hbtn" title="Camera">
+          <span class="upload-hbtn-icon">📷</span><span class="upload-hbtn-txt">Camera</span>
+          <input type="file" id="hfile-camera" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;">
+        </label>
+      </div>
+      <button class="hbtn" id="bsave">💾</button>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- LEFT: tools -->
+    <div class="side-panel" id="left-panel">
+      <button class="tbtn on" data-tool="fill">🪣<span class="lbl">FILL</span></button>
+      <button class="tbtn" data-tool="brush-sm">🖌<span class="lbl">SML</span></button>
+      <button class="tbtn" data-tool="brush-md">🖌<span class="lbl">MED</span></button>
+      <button class="tbtn" data-tool="brush-lg">🖌<span class="lbl">LRG</span></button>
+      <div class="sep"></div>
+      <button class="tbtn" data-tool="glitter-gold">✨<span class="lbl">GOLD</span></button>
+      <button class="tbtn" data-tool="glitter-silver">⭐<span class="lbl">SLVR</span></button>
+      <button class="tbtn" data-tool="glitter-rainbow">🌈<span class="lbl">BOW</span></button>
+      <div class="sep"></div>
+      <button class="tbtn" data-tool="eraser">🧹<span class="lbl">ERASE</span></button>
+    </div>
+
+    <!-- CANVAS -->
+    <div id="cwrap">
+      <canvas id="dc"></canvas>
+      <canvas id="gc"></canvas>
+      <canvas id="wc"></canvas>
+
+      <!-- EMPTY STATE -->
+      <div id="uscreen">
+        <div id="uscreen-inner">
+          <div style="font-size:64px;margin-bottom:12px;">🖼️</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:24px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">Open a coloring page</div>
+          <div style="color:var(--dim);font-size:14px;font-weight:600;">Use Photos · Files · Camera in the top bar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: sensitivity + zoom -->
+    <div class="side-panel" id="right-panel">
+      <div id="sens-box">
+        <label for="sens">FILL<br>SENSE</label>
+        <input type="range" id="sens" min="1" max="100" value="32">
+      </div>
+      <div class="sep"></div>
+      <button class="tbtn" id="bzin">🔍<span class="lbl">IN</span></button>
+      <button class="tbtn" id="bzout">🔎<span class="lbl">OUT</span></button>
+      <button class="tbtn" id="bfit2">⛶<span class="lbl">FIT</span></button>
+    </div>
+  </div>
+
+  <!-- BOTTOM: colors -->
+  <div id="bbar">
+    <!-- swatches go here -->
+    <div id="ccbtn" title="Custom color">
+      <input type="color" id="ccin" value="#ff6b9d">
+    </div>
+  </div>
+
+</div>
+
+<!-- Spinner -->
+<div id="spin" class="gone"><div class="ring"></div></div>
+<!-- Toast -->
+<div id="toast"></div>
+<!-- Brush cursor -->
+<div id="bcur"></div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────
+const MAX_HIST = 50;
+const DMAX = 1600;
+const BSIZES = {'brush-sm':6,'brush-md':16,'brush-lg':32};
+const PALETTE = [
+  '#e74c3c','#e91e63','#9c27b0','#673ab7','#3f51b5','#2196f3',
+  '#03a9f4','#00bcd4','#009688','#4caf50','#8bc34a','#cddc39',
+  '#ffeb3b','#ffc107','#ff9800','#ff5722','#795548','#607d8b',
+  '#ffffff','#cccccc','#888888','#444444','#111111',
+  '#ff6b9d','#c084fc','#67e8f9','#86efac','#fde68a','#fca5a5',
+];
+
+// ─── STATE ───────────────────────────────────────────────────
+let S = {
+  tool:'fill', color:'#e74c3c', sensitivity:32,
+  origImg:null, origW:0, origH:0,
+  zoom:1, tx:0, ty:0,
+  hist:[], hi:-1,
+  ptrs:{}, lastDist:0, lastMid:null,
+  painting:false, lastPt:null,
+  gp:[],
+};
+
+// ─── ELEMENTS ────────────────────────────────────────────────
+const dc  = document.getElementById('dc');
+const dctx= dc.getContext('2d');
+const wc  = document.getElementById('wc');
+const wctx= wc.getContext('2d',{willReadFrequently:true});
+const gc  = document.getElementById('gc');
+const gctx= gc.getContext('2d');
+const cwrap = document.getElementById('cwrap');
+const uscreen = document.getElementById('uscreen');
+const spin = document.getElementById('spin');
+const toast = document.getElementById('toast');
+const bcur = document.getElementById('bcur');
+const sensEl = document.getElementById('sens');
+
+// ─── PALETTE ─────────────────────────────────────────────────
+(function buildPalette(){
+  const bar = document.getElementById('bbar');
+  const ccbtn = document.getElementById('ccbtn');
+  PALETTE.forEach(hex => {
+    const d = document.createElement('div');
+    d.className='sw'; d.style.background=hex; d.dataset.c=hex;
+    if(hex===S.color) d.classList.add('on');
+    d.addEventListener('pointerdown', e=>{ e.stopPropagation(); pickColor(hex); });
+    bar.insertBefore(d, ccbtn);
+  });
+})();
+
+function pickColor(hex){
+  S.color = hex;
+  document.getElementById('ccin').value = hex;
+  document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on', s.dataset.c===hex));
+}
+
+document.getElementById('ccin').addEventListener('input', e=>pickColor(e.target.value));
+
+// ─── TOOLS ───────────────────────────────────────────────────
+document.querySelectorAll('.tbtn[data-tool]').forEach(b=>{
+  b.addEventListener('pointerdown', e=>{e.stopPropagation(); setTool(b.dataset.tool);});
+});
+function setTool(t){
+  S.tool=t;
+  document.querySelectorAll('.tbtn[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
+}
+sensEl.addEventListener('input', ()=>{ S.sensitivity=+sensEl.value; });
+
+// ─── FILE INPUTS (static labels — Safari-safe) ───────────────
+function wireInput(id){
+  document.getElementById(id).addEventListener('change', function(){
+    if(this.files && this.files[0]) loadFile(this.files[0]);
+    this.value='';
+  });
+}
+wireInput('hfile-photos');
+wireInput('hfile-files');
+wireInput('hfile-camera');
+
+function loadFile(file){
+  if(!/image\/(jpeg|jpg|png|gif|webp|bmp)/.test(file.type) && !/\.(jpg|jpeg|png)$/i.test(file.name)){
+    showToast('Please pick a JPG or PNG image'); return;
+  }
+  spin.classList.remove('gone');
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    URL.revokeObjectURL(url);
+    S.origImg=img; S.origW=img.naturalWidth; S.origH=img.naturalHeight;
+    setupCanvas();
+    spin.classList.add('gone');
+    uscreen.classList.add('gone');
+    showToast('Image loaded — start coloring! 🎨');
+  };
+  img.onerror = ()=>{ spin.classList.add('gone'); showToast('Could not load that image'); };
+  img.src=url;
+}
+
+// ─── CANVAS SETUP ────────────────────────────────────────────
+function setupCanvas(){
+  const ww=cwrap.clientWidth, wh=cwrap.clientHeight;
+  let dw=S.origW, dh=S.origH;
+  const mx=Math.min(DMAX, ww*0.96, wh*0.96);
+  if(dw>mx||dh>mx){ const r=Math.min(mx/dw,mx/dh); dw=Math.round(dw*r); dh=Math.round(dh*r); }
+
+  wc.width=dw; wc.height=dh;
+  wctx.drawImage(S.origImg,0,0,dw,dh);
+
+  dc.width=dw; dc.height=dh;
+  gc.width=dw; gc.height=dh;
+
+  dc.style.width=dw+'px'; dc.style.height=dh+'px';
+  gc.style.width=dw+'px'; gc.style.height=dh+'px';
+
+  S.zoom=1; S.tx=0; S.ty=0;
+  applyXform();
+  redraw();
+  pushHist();
+}
+
+function redraw(){
+  if(!wc.width) return;
+  dctx.clearRect(0,0,dc.width,dc.height);
+  dctx.drawImage(wc,0,0);
+}
+
+function applyXform(){
+  const dw=dc.width||0, dh=dc.height||0, z=S.zoom;
+  const cx=cwrap.clientWidth/2, cy=cwrap.clientHeight/2;
+  const l=cx-dw*z/2+S.tx, t=cy-dh*z/2+S.ty;
+  const ts=`translate(${l}px,${t}px) scale(${z})`;
+  dc.style.transform=ts; dc.style.transformOrigin='0 0';
+  gc.style.transform=ts; gc.style.transformOrigin='0 0';
+}
+
+// ─── COORD MAPPING ───────────────────────────────────────────
+function p2c(e){
+  const dw=dc.width, dh=dc.height, z=S.zoom;
+  const cx=cwrap.clientWidth/2, cy=cwrap.clientHeight/2;
+  const l=cx-dw*z/2+S.tx, t=cy-dh*z/2+S.ty;
+  const r=cwrap.getBoundingClientRect();
+  return { x:Math.round((e.clientX-r.left-l)/z), y:Math.round((e.clientY-r.top-t)/z) };
+}
+function inB(x,y){ return x>=0&&y>=0&&x<wc.width&&y<wc.height; }
+
+// ─── FLOOD FILL ──────────────────────────────────────────────
+function h2rgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+
+function floodFill(sx,sy,hex){
+  if(!inB(sx,sy)) return;
+  const id=wctx.getImageData(0,0,wc.width,wc.height);
+  const d=id.data, W=wc.width, H=wc.height;
+  const [fr,fg,fb]=h2rgb(hex);
+  const i0=(sx+sy*W)*4;
+  const [tr,tg,tb]=[d[i0],d[i0+1],d[i0+2]];
+  if(tr<60&&tg<60&&tb<60) return; // don't fill outline
+  if(tr===fr&&tg===fg&&tb===fb) return;
+  const thr=Math.round(S.sensitivity*4.41);
+  const vis=new Uint8Array(W*H);
+  const stk=[sx+sy*W]; vis[stk[0]]=1;
+  while(stk.length){
+    const p=stk.pop();
+    const x=p%W, y=(p/W)|0, i=p*4;
+    d[i]=fr;d[i+1]=fg;d[i+2]=fb;d[i+3]=255;
+    const nb=[p-1,p+1,p-W,p+W];
+    for(let n=0;n<4;n++){
+      const np=nb[n];
+      if(np<0||np>=W*H||vis[np]) continue;
+      if(n===0&&p%W===0) continue;
+      if(n===1&&p%W===W-1) continue;
+      vis[np]=1;
+      const ni=np*4;
+      if(d[ni]<60&&d[ni+1]<60&&d[ni+2]<60) continue; // outline
+      if(Math.abs(d[ni]-tr)+Math.abs(d[ni+1]-tg)+Math.abs(d[ni+2]-tb)<=thr) stk.push(np);
+    }
+  }
+  wctx.putImageData(id,0,0);
+}
+
+// ─── BRUSH / ERASER ──────────────────────────────────────────
+function dot(x,y,r,col,erase){
+  wctx.save();
+  wctx.globalCompositeOperation=erase?'destination-out':'source-over';
+  wctx.fillStyle=erase?'rgba(0,0,0,1)':col;
+  wctx.beginPath(); wctx.arc(x,y,r,0,Math.PI*2); wctx.fill();
+  wctx.restore();
+}
+function stroke(x0,y0,x1,y1,r,col,erase){
+  const d=Math.hypot(x1-x0,y1-y0), steps=Math.max(1,Math.ceil(d/(r/3)));
+  for(let i=0;i<=steps;i++) dot(x0+(x1-x0)*i/steps,y0+(y1-y0)*i/steps,r,col,erase);
+}
+
+// ─── GLITTER ─────────────────────────────────────────────────
+const GCOL={
+  'glitter-gold':()=>`hsl(${40+Math.random()*20},100%,${50+Math.random()*30}%)`,
+  'glitter-silver':()=>`hsl(0,0%,${60+Math.random()*40}%)`,
+  'glitter-rainbow':()=>`hsl(${Math.random()*360},100%,${55+Math.random()*20}%)`,
+};
+function spawnGlitter(x,y,type){
+  wctx.save(); wctx.globalCompositeOperation='source-over';
+  for(let i=0;i<10;i++){
+    const px=x+(Math.random()-.5)*18, py=y+(Math.random()-.5)*18;
+    wctx.fillStyle=GCOL[type](); wctx.beginPath(); wctx.arc(px,py,1+Math.random()*2.5,0,Math.PI*2); wctx.fill();
+    S.gp.push({x:px,y:py,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2-.5,
+      sz:2+Math.random()*3,col:GCOL[type](),life:1,dc:0.04+Math.random()*0.04});
+  }
+  wctx.restore();
+  animGlitter();
+}
+let graf=0;
+function animGlitter(){
+  cancelAnimationFrame(graf);
+  graf=requestAnimationFrame(()=>{
+    gctx.clearRect(0,0,gc.width,gc.height);
+    S.gp=S.gp.filter(p=>p.life>0);
+    S.gp.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life-=p.dc;
+      gctx.save(); gctx.globalAlpha=Math.max(0,p.life);
+      gctx.fillStyle=p.col; gctx.shadowColor=p.col; gctx.shadowBlur=5;
+      gctx.beginPath(); gctx.arc(p.x,p.y,p.sz,0,Math.PI*2); gctx.fill();
+      gctx.restore();
+    });
+    if(S.gp.length) animGlitter(); else gctx.clearRect(0,0,gc.width,gc.height);
+  });
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────
+function pushHist(){
+  if(!wc.width) return;
+  S.hist=S.hist.slice(0,S.hi+1);
+  S.hist.push(wctx.getImageData(0,0,wc.width,wc.height));
+  if(S.hist.length>MAX_HIST) S.hist.shift();
+  S.hi=S.hist.length-1; updateHbtns();
+}
+function undo(){ if(S.hi<=0)return; S.hi--; wctx.putImageData(S.hist[S.hi],0,0); redraw(); updateHbtns(); }
+function redo(){ if(S.hi>=S.hist.length-1)return; S.hi++; wctx.putImageData(S.hist[S.hi],0,0); redraw(); updateHbtns(); }
+function updateHbtns(){
+  document.getElementById('bundo').classList.toggle('off',S.hi<=0);
+  document.getElementById('bredo').classList.toggle('off',S.hi>=S.hist.length-1);
+}
+document.getElementById('bundo').addEventListener('pointerdown',e=>{e.stopPropagation();undo();});
+document.getElementById('bredo').addEventListener('pointerdown',e=>{e.stopPropagation();redo();});
+
+// ─── POINTER EVENTS ──────────────────────────────────────────
+cwrap.addEventListener('pointerdown', onDown, {passive:false});
+cwrap.addEventListener('pointermove', onMove, {passive:false});
+cwrap.addEventListener('pointerup',   onUp,   {passive:false});
+cwrap.addEventListener('pointercancel',onUp,  {passive:false});
+
+function onDown(e){
+  e.preventDefault();
+  S.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  const n=Object.keys(S.ptrs).length;
+  if(n===1&&S.origImg){ toolDown(p2c(e)); }
+  else if(n===2){
+    if(S.painting) commitPaint();
+    const pts=Object.values(S.ptrs);
+    S.lastDist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+    S.lastMid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+  }
+}
+function onMove(e){
+  e.preventDefault();
+  S.ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  const n=Object.keys(S.ptrs).length;
+  moveBcur(e);
+  if(n===1&&S.painting&&S.origImg){ toolMove(p2c(e)); }
+  else if(n===2){
+    const pts=Object.values(S.ptrs);
+    const dist=Math.hypot(pts[1].x-pts[0].x,pts[1].y-pts[0].y);
+    const mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+    if(S.lastDist) S.zoom=Math.max(0.3,Math.min(8,S.zoom*dist/S.lastDist));
+    if(S.lastMid){ S.tx+=mid.x-S.lastMid.x; S.ty+=mid.y-S.lastMid.y; }
+    S.lastDist=dist; S.lastMid=mid; applyXform();
+  }
+}
+function onUp(e){
+  e.preventDefault();
+  delete S.ptrs[e.pointerId];
+  const n=Object.keys(S.ptrs).length;
+  if(n<2){ S.lastDist=0; S.lastMid=null; }
+  if(n===0&&S.painting) commitPaint();
+}
+
+function toolDown(pt){
+  const t=S.tool;
+  if(t==='fill'){ floodFill(pt.x,pt.y,S.color); redraw(); pushHist(); }
+  else{ S.painting=true; S.lastPt=pt; applyBrush(pt.x,pt.y,pt.x,pt.y); redraw(); }
+}
+function toolMove(pt){
+  if(!S.painting) return;
+  applyBrush(S.lastPt.x,S.lastPt.y,pt.x,pt.y);
+  S.lastPt=pt; redraw();
+}
+function commitPaint(){ S.painting=false; S.lastPt=null; pushHist(); }
+
+function applyBrush(x0,y0,x1,y1){
+  const t=S.tool;
+  if(t==='eraser'){ stroke(x0,y0,x1,y1,18,null,true); }
+  else if(BSIZES[t]){ stroke(x0,y0,x1,y1,BSIZES[t]/2,S.color,false); }
+  else if(t.startsWith('glitter')){
+    if(Math.hypot(x1-x0,y1-y0)>4||x0===x1) spawnGlitter(x1,y1,t);
+  }
+}
+
+// Double-tap zoom
+let lastTap=0;
+cwrap.addEventListener('touchend',e=>{
+  if(e.touches.length>0) return;
+  const now=Date.now();
+  if(now-lastTap<280){ S.zoom>1.5?fitScreen():(S.zoom=2.5,applyXform()); }
+  lastTap=now;
+},{passive:true});
+
+// ─── BRUSH CURSOR ────────────────────────────────────────────
+function moveBcur(e){
+  const t=S.tool;
+  let r=0;
+  if(t==='eraser') r=18;
+  else if(BSIZES[t]) r=BSIZES[t]/2;
+  else if(t.startsWith('glitter')) r=12;
+  if(!r){ bcur.style.display='none'; return; }
+  const sz=r*2*S.zoom;
+  bcur.style.cssText=`display:block;width:${sz}px;height:${sz}px;left:${e.clientX}px;top:${e.clientY}px;
+    border:2px solid ${t==='eraser'?'rgba(255,255,255,.8)':S.color};
+    background:${t==='eraser'?'rgba(255,255,255,.1)':S.color+'33'};
+    border-radius:50%;position:fixed;pointer-events:none;transform:translate(-50%,-50%);z-index:50;`;
+}
+cwrap.addEventListener('pointerleave',()=>{ bcur.style.display='none'; });
+
+// ─── ZOOM / FIT BUTTONS ──────────────────────────────────────
+document.getElementById('bzin').addEventListener('pointerdown',e=>{ e.stopPropagation(); S.zoom=Math.min(8,S.zoom*1.4); applyXform(); });
+document.getElementById('bzout').addEventListener('pointerdown',e=>{ e.stopPropagation(); S.zoom=Math.max(0.3,S.zoom/1.4); applyXform(); });
+document.getElementById('bfit').addEventListener('pointerdown',e=>{ e.stopPropagation(); fitScreen(); });
+document.getElementById('bfit2').addEventListener('pointerdown',e=>{ e.stopPropagation(); fitScreen(); });
+function fitScreen(){ S.zoom=1; S.tx=0; S.ty=0; applyXform(); }
+
+// ─── SAVE ────────────────────────────────────────────────────
+document.getElementById('bsave').addEventListener('pointerdown',e=>{
+  e.stopPropagation();
+  if(!S.origImg){ showToast('Open an image first!'); return; }
+  spin.classList.remove('gone');
+  setTimeout(()=>{
+    const ex=document.createElement('canvas');
+    ex.width=S.origW; ex.height=S.origH;
+    const ec=ex.getContext('2d');
+    ec.drawImage(S.origImg,0,0,S.origW,S.origH);
+    ec.drawImage(wc,0,0,S.origW,S.origH);
+    ex.toBlob(blob=>{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='rudra-coloring-'+Date.now()+'.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      spin.classList.add('gone');
+      showToast('Saved! 🎉');
+    },'image/png');
+  },60);
+});
+
+// ─── RESIZE ──────────────────────────────────────────────────
+window.addEventListener('resize',()=>{
+  if(S.origImg){
+    const tmp=document.createElement('canvas');
+    tmp.width=wc.width; tmp.height=wc.height;
+    tmp.getContext('2d').putImageData(wctx.getImageData(0,0,wc.width,wc.height),0,0);
+    setupCanvas();
+    wctx.drawImage(tmp,0,0,wc.width,wc.height);
+    redraw();
+  }
+  applyXform();
+});
+
+// ─── TOAST ───────────────────────────────────────────────────
+function showToast(msg){
+  toast.textContent=msg; toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>toast.classList.remove('show'),2600);
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+applyXform();
+updateHbtns();
+showToast('Welcome to Rudra! 🎨 Tap an option to open your image');
+</script>
+</body>
+</html>
